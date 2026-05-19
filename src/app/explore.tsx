@@ -1,32 +1,52 @@
-import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
-import React from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-export default function TabTwoScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
+const FEATURED_BIRDS = [
+  { id: '1', name: 'Bald Eagle', family: 'Accipitridae', status: 'Least Concern' },
+  { id: '2', name: 'Snowy Owl', family: 'Strigidae', status: 'Vulnerable' },
+  { id: '3', name: 'Pileated Woodpecker', family: 'Picidae', status: 'Least Concern' },
+  { id: '4', name: 'Painted Bunting', family: 'Cardinalidae', status: 'Near Threatened' },
+  { id: '5', name: 'Atlantic Puffin', family: 'Alcidae', status: 'Vulnerable' },
+  { id: '6', name: 'Peregrine Falcon', family: 'Falconidae', status: 'Least Concern' },
+];
+
+const CATEGORIES = [
+  { label: 'Raptors', icon: { ios: 'wind' as const, android: 'airplanemode_active' as const, web: 'airplanemode_active' as const } },
+  { label: 'Songbirds', icon: { ios: 'music.note' as const, android: 'music_note' as const, web: 'music_note' as const } },
+  { label: 'Waterfowl', icon: { ios: 'drop.fill' as const, android: 'water_drop' as const, web: 'water_drop' as const } },
+  { label: 'Shorebirds', icon: { ios: 'beach.umbrella' as const, android: 'beach_access' as const, web: 'beach_access' as const } },
+];
+
+function StatusBadge({ status }: { status: string }) {
   const theme = useTheme();
+  const isVulnerable = status === 'Vulnerable' || status === 'Near Threatened';
+
+  return (
+    <View style={[styles.badge, { backgroundColor: isVulnerable ? theme.accentLight : theme.backgroundElement }]}>
+      <ThemedText
+        type="small"
+        style={{ fontSize: 11, color: isVulnerable ? theme.accent : theme.textSecondary }}>
+        {status}
+      </ThemedText>
+    </View>
+  );
+}
+
+export default function ExploreScreen() {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   const contentPlatformStyle = Platform.select({
     android: {
       paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
+      paddingBottom: insets.bottom + BottomTabInset + Spacing.three,
     },
+    ios: {},
     web: {
       paddingTop: Spacing.six,
       paddingBottom: Spacing.four,
@@ -36,92 +56,61 @@ export default function TabTwoScreen() {
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
+      contentInset={{ ...insets, bottom: insets.bottom + BottomTabInset + Spacing.three }}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
+      <View style={styles.container}>
+        <View style={styles.header}>
           <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+          <ThemedText themeColor="textSecondary">Discover birds in your area</ThemedText>
+        </View>
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
+        <View style={[styles.searchBar, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+          <SymbolView
+            tintColor={theme.textSecondary}
+            name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+            size={18}
+          />
+          <TextInput
+            placeholder="Search birds, locations..."
+            placeholderTextColor={theme.textSecondary}
+            style={[styles.searchInput, { color: theme.text }]}
+          />
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
+          {CATEGORIES.map((cat) => (
+            <Pressable key={cat.label}>
+              <View style={[styles.categoryChip, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+                <SymbolView tintColor={theme.primary} name={cat.icon} size={16} />
+                <ThemedText type="small">{cat.label}</ThemedText>
+              </View>
             </Pressable>
-          </ExternalLink>
-        </ThemedView>
+          ))}
+        </ScrollView>
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+        <View style={styles.sectionHeader}>
+          <ThemedText style={styles.sectionTitle}>Featured Species</ThemedText>
+        </View>
 
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible>
-
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
+        {FEATURED_BIRDS.map((bird) => (
+          <Pressable key={bird.id}>
+            <View style={[styles.birdRow, { borderColor: theme.border }]}>
+              <View style={[styles.birdIcon, { backgroundColor: theme.backgroundElement }]}>
+                <SymbolView
+                  tintColor={theme.primary}
+                  name={{ ios: 'bird.fill', android: 'flutter_dash', web: 'flutter_dash' }}
+                  size={22}
+                />
+              </View>
+              <View style={styles.birdInfo}>
+                <ThemedText style={styles.birdName}>{bird.name}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">{bird.family}</ThemedText>
+              </View>
+              <StatusBadge status={bird.status} />
+            </View>
+          </Pressable>
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -137,45 +126,72 @@ const styles = StyleSheet.create({
   container: {
     maxWidth: MaxContentWidth,
     flexGrow: 1,
-  },
-  titleContainer: {
-    gap: Spacing.three,
-    alignItems: 'center',
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
   },
-  centerText: {
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
+  header: {
+    paddingVertical: Spacing.five,
     gap: Spacing.one,
+  },
+  searchBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    gap: Spacing.two,
+    marginBottom: Spacing.three,
   },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: Spacing.one,
   },
-  collapsibleContent: {
+  categoriesScroll: {
+    marginBottom: Spacing.four,
+  },
+  categoryChip: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: Spacing.two,
   },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
+  sectionHeader: {
+    marginBottom: Spacing.three,
   },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  birdRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.three,
+    borderBottomWidth: 1,
+    gap: Spacing.three,
+  },
+  birdIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  birdInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  birdName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  badge: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
 });

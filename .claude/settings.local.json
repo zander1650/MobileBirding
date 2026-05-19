@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.expo.dev)",
+      "Bash(npx expo *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(Select-Object -First 30)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)"
+    ]
+  }
+}
